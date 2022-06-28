@@ -12,7 +12,7 @@
     "pretest": "npm run build",
     "test": "mocha --recursive --full-trace --exit",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --fix",
+    "lint:fix": "eslint . --fix --ext .ts",
     "coverage": "nyc mocha && nyc report --reporter=html && nyc report --reporter=json-summary",
     "lcov": "nyc mocha && nyc report --reporter=lcov",
     "posttest": "npm run lint"

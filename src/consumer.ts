@@ -121,6 +121,7 @@ export class Consumer extends EventEmitter {
   private heartbeatInterval: number;
   private sqs: SQS;
   private shouldDeleteMessages: boolean;
+  private lastPollAt?: number;
 
   constructor(options: ConsumerOptions) {
     super();
@@ -162,6 +163,24 @@ export class Consumer extends EventEmitter {
 
   public get isRunning(): boolean {
     return !this.stopped;
+  }
+
+  /**
+   * Returns true if polling has occurred within the expected
+   * polling wait time interval (`pollingWaitTimeMs`).
+   * @note - Contrast with `isRunning`, which indicates whether
+   * polling SHOULD be happening. `isHealthy` indicates whether
+   * there is evidence polling is actually happening.
+   */
+  public get isHealthy(): boolean {
+    if (!this.lastPollAt && !this.stopped) {
+      return false;
+    }
+    if (!this.lastPollAt) {
+      return true;
+    }
+    const timeElapsedSinceLastPoll = this.lastPollAt - Date.now();
+    return this.pollingWaitTimeMs > timeElapsedSinceLastPoll;
   }
 
   public static create(options: ConsumerOptions): Consumer {
@@ -309,6 +328,8 @@ export class Consumer extends EventEmitter {
       this.emit('stopped');
       return;
     }
+
+    this.lastPollAt = Date.now();
 
     debug('Polling for messages');
     const receiveParams = {

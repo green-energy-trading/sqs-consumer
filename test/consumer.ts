@@ -807,6 +807,51 @@ describe('Consumer', () => {
     });
   });
 
+  describe('isHealthy', async () => {
+
+    it('returns true if polling not started', () => {
+      assert.isTrue(consumer.isHealthy);
+    });
+
+    it('returns true if the consumer has polled in the expected timeframe', async () => {
+      consumer = new Consumer({
+        queueUrl: 'some-queue-url',
+        region: 'some-region',
+        handleMessage,
+        sqs,
+        pollingWaitTimeMs: POLLING_TIMEOUT
+      });
+
+      consumer.start();
+      assert.isFalse(consumer.isHealthy);
+      await clock.tickAsync(POLLING_TIMEOUT);
+      assert.isTrue(consumer.isHealthy);
+    });
+
+    it('returns false if the consumer has NOT polled in the expected timeframe', async () => {
+      /**
+       * Message handler will crash the consumer prevening further polling.
+       */
+      async function handleMessage() {
+        await new Promise(async () => {
+          throw new Error('unhandled promise rejection');
+        });
+      }
+      consumer = new Consumer({
+        queueUrl: 'some-queue-url',
+        region: 'some-region',
+        handleMessage,
+        sqs,
+        pollingWaitTimeMs: POLLING_TIMEOUT
+      });
+
+      consumer.start();
+      assert.isFalse(consumer.isHealthy);
+      await clock.tickAsync(POLLING_TIMEOUT);
+      assert.isFalse(consumer.isHealthy);
+    });
+  });
+
   describe('delete messages property', () => {
     beforeEach(() => {
       consumer = new Consumer({
