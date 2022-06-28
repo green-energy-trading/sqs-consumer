@@ -826,13 +826,21 @@ describe('Consumer', () => {
       assert.isFalse(consumer.isHealthy);
       await clock.tickAsync(POLLING_TIMEOUT);
       assert.isTrue(consumer.isHealthy);
+      await clock.tickAsync(POLLING_TIMEOUT * 0.5);
+      assert.isTrue(consumer.isHealthy);
     });
 
     it('returns false if the consumer has NOT polled in the expected timeframe', async () => {
       /**
-       * Message handler will crash the consumer prevening further polling.
+       * Message handler will succeed the first time. Then it will crash 
+       * the consumer preventing further polling.
        */
+      let counter = 0
       async function handleMessage() {
+        if (counter === 0) {
+          counter++
+          return
+        }
         await new Promise(async () => {
           throw new Error('unhandled promise rejection');
         });
@@ -848,6 +856,10 @@ describe('Consumer', () => {
       consumer.start();
       assert.isFalse(consumer.isHealthy);
       await clock.tickAsync(POLLING_TIMEOUT);
+      // First message handler invocation is successful
+      assert.isTrue(consumer.isHealthy);
+      await clock.tickAsync(POLLING_TIMEOUT * 1.5);
+      // Second message handler invocation crashes the consumer
       assert.isFalse(consumer.isHealthy);
     });
   });
