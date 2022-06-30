@@ -180,7 +180,7 @@ export class Consumer extends EventEmitter {
       return true;
     }
     const timeElapsedSinceLastPoll = Date.now() - this.lastPollAt;
-    return this.pollingWaitTimeMs > timeElapsedSinceLastPoll;
+    return this.pollingWaitTimeMs >= timeElapsedSinceLastPoll;
   }
 
   public static create(options: ConsumerOptions): Consumer {

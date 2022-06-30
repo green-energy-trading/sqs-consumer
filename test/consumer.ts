@@ -832,14 +832,14 @@ describe('Consumer', () => {
 
     it('returns false if the consumer has NOT polled in the expected timeframe', async () => {
       /**
-       * Message handler will succeed the first time. Then it will crash 
+       * Message handler will succeed the first time. Then it will crash
        * the consumer preventing further polling.
        */
-      let counter = 0
+      let counter = 0;
       async function handleMessage() {
         if (counter === 0) {
-          counter++
-          return
+          counter++;
+          return;
         }
         await new Promise(async () => {
           throw new Error('unhandled promise rejection');
