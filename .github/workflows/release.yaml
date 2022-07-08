@@ -7,8 +7,6 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-18.04
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -22,11 +20,10 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build
-        run: |
-          npm run prepare
-          echo "//npm.pkg.github.com/:_authToken=$GH_TOKEN" > /home/runner/work/_temp/.npmrc
+        run: npm run prepare
       - name: Release
         uses: JS-DevTools/npm-publish@v1
         with:
-          token: ${{ secrets.NPM_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
+          registry: https://npm.pkg.github.com
           
