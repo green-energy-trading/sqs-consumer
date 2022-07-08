@@ -25,5 +25,4 @@ jobs:
         uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.GH_TOKEN }}
-          registry: https://npm.pkg.github.com
           
