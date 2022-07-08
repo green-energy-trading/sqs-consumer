@@ -807,6 +807,63 @@ describe('Consumer', () => {
     });
   });
 
+  describe('isHealthy', async () => {
+
+    it('returns true if polling not started', () => {
+      assert.isTrue(consumer.isHealthy);
+    });
+
+    it('returns true if the consumer has polled in the expected timeframe', async () => {
+      consumer = new Consumer({
+        queueUrl: 'some-queue-url',
+        region: 'some-region',
+        handleMessage,
+        sqs,
+        pollingWaitTimeMs: POLLING_TIMEOUT
+      });
+
+      consumer.start();
+      assert.isFalse(consumer.isHealthy);
+      await clock.tickAsync(POLLING_TIMEOUT);
+      assert.isTrue(consumer.isHealthy);
+      await clock.tickAsync(POLLING_TIMEOUT * 0.5);
+      assert.isTrue(consumer.isHealthy);
+    });
+
+    it('returns false if the consumer has NOT polled in the expected timeframe', async () => {
+      /**
+       * Message handler will succeed the first time. Then it will crash
+       * the consumer preventing further polling.
+       */
+      let counter = 0;
+      async function handleMessage() {
+        if (counter === 0) {
+          counter++;
+          return;
+        }
+        await new Promise(async () => {
+          throw new Error('unhandled promise rejection');
+        });
+      }
+      consumer = new Consumer({
+        queueUrl: 'some-queue-url',
+        region: 'some-region',
+        handleMessage,
+        sqs,
+        pollingWaitTimeMs: POLLING_TIMEOUT
+      });
+
+      consumer.start();
+      assert.isFalse(consumer.isHealthy);
+      await clock.tickAsync(POLLING_TIMEOUT);
+      // First message handler invocation is successful
+      assert.isTrue(consumer.isHealthy);
+      await clock.tickAsync(POLLING_TIMEOUT * 1.5);
+      // Second message handler invocation crashes the consumer
+      assert.isFalse(consumer.isHealthy);
+    });
+  });
+
   describe('delete messages property', () => {
     beforeEach(() => {
       consumer = new Consumer({
