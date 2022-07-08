@@ -22,7 +22,9 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build
-        run: npm run prepare
+        run: |
+          npm run prepare
+          echo "//npm.pkg.github.com/:_authToken=$GH_TOKEN" > /home/runner/work/_temp/.npmrc
       - name: Release
         uses: JS-DevTools/npm-publish@v1
         with:
